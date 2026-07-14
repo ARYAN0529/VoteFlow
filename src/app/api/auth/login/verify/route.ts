@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyAuthenticationResponse } from "@simplewebauthn/server";
 import { connectDB } from "@/lib/db";
-import User from "@/models/User";
+import User from "@/models/user";
 import { getSession } from "@/lib/session";
 
 const rpID = process.env.RP_ID as string;
+//ORIGIN=https://nextvote.com
 const origin = process.env.ORIGIN as string;
 
 export async function POST(req: NextRequest) {
@@ -24,7 +25,8 @@ export async function POST(req: NextRequest) {
   if (!user) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
-
+  // user.authenticators is an array of all the authenticators registered by the user like 
+      // window hello ,phone fingerprint 
   const authenticator = user.authenticators.find((a) => a.credentialID === body.id);
   if (!authenticator) {
     return NextResponse.json({ error: "Credential not recognized" }, { status: 400 });
@@ -39,7 +41,7 @@ export async function POST(req: NextRequest) {
       expectedRPID: rpID,
       credential: {
         id: authenticator.credentialID,
-        publicKey: authenticator.credentialPublicKey,
+        publicKey: Uint8Array.from(authenticator.credentialPublicKey),
         counter: authenticator.counter,
         transports: authenticator.transports as any,
       },

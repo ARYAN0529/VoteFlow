@@ -1,10 +1,13 @@
-import { NextRequest, NextResponse } from "next/server";
+import {NextRequest , NextResponse} from "next/server"
 import { generateAuthenticationOptions } from "@simplewebauthn/server";
 import { connectDB } from "@/lib/db";
 import User from "@/models/user";
 import { getSession } from "@/lib/session";
 
-const rpID = process.env.RP_ID as string;
+// if it is website -> https://nextvote.com
+ // then rpid is nextvote.com
+
+ const rpID = process.env.RP_ID as string;
 
 export async function POST(req: NextRequest) {
   const { username } = await req.json();
@@ -13,8 +16,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "username is required" }, { status: 400 });
   }
 
-  await connectDB();
 
+  await connectDB();
+ // checking if user exists in database
   const user = await User.findOne({ username });
   if (!user || user.authenticators.length === 0) {
     return NextResponse.json({ error: "No account found for that username" }, { status: 404 });
