@@ -6,8 +6,9 @@ import { cookies } from "next/headers";
 // and stored in the browser's cookie for THIS logged-in visitor.
 export interface SessionData {
   userId?: string;       // set once the user logs in
-  username?: string;     // set once the user logs in
-  currentChallenge?: string; // temporary, only used during passkey login/register
+  email?: string;        // set once the user logs in
+  currentChallenge?: string;  // temporary, only used during passkey login/register
+  pendingDisplayName?: string; // temporary, carries the "name" field from register/options to register/verify
 }
 
 // these are the settings iron-session uses to encrypt/decrypt the cookie
@@ -60,12 +61,12 @@ export async function getSession(): Promise<IronSession<SessionData>> {
 //
 // You'll use this to protect pages like /polls/new and /polls/manage,
 // and to check "is this person allowed to close/reset THIS poll?"
-export async function getCurrentUser(): Promise<{ userId: string; username: string } | null> {
+export async function getCurrentUser(): Promise<{ userId: string; email: string } | null> {
   const session = await getSession();
 
-  if (!session.userId || !session.username) {
+  if (!session.userId || !session.email) {
     return null; // nobody logged in
   }
 
-  return { userId: session.userId, username: session.username };
+  return { userId: session.userId, email: session.email };
 }

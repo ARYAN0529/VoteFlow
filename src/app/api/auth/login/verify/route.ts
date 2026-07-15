@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyAuthenticationResponse } from "@simplewebauthn/server";
 import { connectDB } from "@/lib/db";
-import User from "@/models/user";
+import User from "@/models/User";
 import { getSession } from "@/lib/session";
 
 const rpID = process.env.RP_ID as string;
-//ORIGIN=https://nextvote.com
 const origin = process.env.ORIGIN as string;
 
 export async function POST(req: NextRequest) {
@@ -13,20 +12,19 @@ export async function POST(req: NextRequest) {
 
   const session = await getSession();
   const expectedChallenge = session.currentChallenge;
-  const username = session.username;
+  const email = session.email;
 
-  if (!expectedChallenge || !username) {
+  if (!expectedChallenge || !email) {
     return NextResponse.json({ error: "No login in progress" }, { status: 400 });
   }
 
   await connectDB();
 
-  const user = await User.findOne({ username });
+  const user = await User.findOne({ email });
   if (!user) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
-  // user.authenticators is an array of all the authenticators registered by the user like 
-      // window hello ,phone fingerprint 
+
   const authenticator = user.authenticators.find((a) => a.credentialID === body.id);
   if (!authenticator) {
     return NextResponse.json({ error: "Credential not recognized" }, { status: 400 });
@@ -39,6 +37,7 @@ export async function POST(req: NextRequest) {
       expectedChallenge,
       expectedOrigin: origin,
       expectedRPID: rpID,
+      requireUserVerification: false,
       credential: {
         id: authenticator.credentialID,
         publicKey: Uint8Array.from(authenticator.credentialPublicKey),
@@ -55,12 +54,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Login could not be verified" }, { status: 400 });
   }
 
-  // Update the stored counter to guard against cloned authenticators
   authenticator.counter = verification.authenticationInfo.newCounter;
   await user.save();
 
   session.userId = user._id.toString();
-  session.username = user.username;
+  session.email = user.email;
   session.currentChallenge = undefined;
   await session.save();
 

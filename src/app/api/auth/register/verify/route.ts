@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyRegistrationResponse } from "@simplewebauthn/server";
 import { connectDB } from "@/lib/db";
-import User from "@/models/user";
+import User from "@/models/User";
 import { getSession } from "@/lib/session";
 
 const rpID = process.env.RP_ID as string;
@@ -12,9 +12,9 @@ export async function POST(req: NextRequest) {
 
   const session = await getSession();
   const expectedChallenge = session.currentChallenge;
-  const username = session.username;
+  const email = session.email;
 
-  if (!expectedChallenge || !username) {
+  if (!expectedChallenge || !email) {
     return NextResponse.json({ error: "No registration in progress" }, { status: 400 });
   }
 
@@ -40,8 +40,8 @@ export async function POST(req: NextRequest) {
   await connectDB();
 
   const newUser = await User.create({
-    username,
-    displayName: username,
+    email,
+    displayName: session.pendingDisplayName || email,
     authenticators: [
       {
         credentialID: credential.id,
@@ -52,10 +52,10 @@ export async function POST(req: NextRequest) {
     ],
   });
 
-  // Registration successful — log the user in immediately.
   session.userId = newUser._id.toString();
-  session.username = newUser.username;
+  session.email = newUser.email;
   session.currentChallenge = undefined;
+  session.pendingDisplayName = undefined;
   await session.save();
 
   return NextResponse.json({ verified: true });

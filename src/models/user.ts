@@ -7,17 +7,14 @@ export interface IAuthenticator {
   transports?: string[];
 }
 
-// interface -> It does not create an object. It only describes what the object should look like.
 export interface IUser extends Document {
-  username: string;
+  email: string;
   displayName: string;
   currentChallenge?: string;
   authenticators: IAuthenticator[];
   createdAt: Date;
 }
 
-// creating schema -> It creates an object that defines the structure of the document in the database.
-//buffer -> sequence of bytes 
 const AuthenticatorSchema = new Schema<IAuthenticator>(
   {
     credentialID: { type: String, required: true },
@@ -29,19 +26,13 @@ const AuthenticatorSchema = new Schema<IAuthenticator>(
 );
 
 const UserSchema = new Schema<IUser>({
-  username: { type: String, required: true, unique: true, trim: true },
+  email: { type: String, required: true, unique: true, trim: true, lowercase: true },
   displayName: { type: String, required: true },
   currentChallenge: { type: String },
   authenticators: { type: [AuthenticatorSchema], default: [] },
   createdAt: { type: Date, default: Date.now },
 });
 
-//creating a model 
-let User: Model<IUser>;
-if(mongoose.models.User) {
-  User = mongoose.models.User;
-} else {
-  User = mongoose.model<IUser>("User", UserSchema);
-}
+const User: Model<IUser> = mongoose.models.User || mongoose.model<IUser>("User", UserSchema);
 
 export default User;
