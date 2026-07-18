@@ -7,6 +7,7 @@ import { cookies } from "next/headers";
 export interface SessionData {
   userId?: string;       // set once the user logs in
   email?: string;        // set once the user logs in
+   
   currentChallenge?: string;  // temporary, only used during passkey login/register
   pendingDisplayName?: string; // temporary, carries the "name" field from register/options to register/verify
 }

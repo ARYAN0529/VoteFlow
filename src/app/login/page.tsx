@@ -10,7 +10,7 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  async function handleLogin(e: React.FormEvent) {
+  const handleLogin: React.FormEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
@@ -56,36 +56,66 @@ export default function LoginPage() {
       setError("Passkey login was cancelled or failed");
       setLoading(false);
     }
-  }
+  };
 
   return (
-    <div className="max-w-sm mx-auto mt-20 px-4">
-      <h1 className="text-2xl font-semibold mb-6">Login to Votify</h1>
+    <div className="relative min-h-screen overflow-hidden bg-black">
+      {/* Grid Background */}
+      <div
+        className="absolute inset-0"
+        style={{
+          backgroundColor: "#000",
+          backgroundImage: `
+            linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px)
+          `,
+          backgroundSize: "56px 56px",
+        }}
+      />
 
-      <form onSubmit={handleLogin} className="flex flex-col gap-4">
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          className="border rounded px-3 py-2"
-        />
+      {/* Content */}
+      <div className="relative z-10 flex min-h-screen items-center justify-center px-4">
+        <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-neutral-900/70 p-8 backdrop-blur-md">
+          <h1 className="mb-6 text-2xl font-semibold text-white">
+            Login to Votify
+          </h1>
 
-        {error && <p className="text-red-600 text-sm">{error}</p>}
+          <form onSubmit={handleLogin} className="flex flex-col gap-4">
+            <input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2 text-white outline-none transition focus:border-blue-500 placeholder:text-neutral-500"
+            />
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="bg-black text-white rounded px-4 py-2 disabled:opacity-50"
-        >
-          {loading ? "Verifying passkey..." : "Login with passkey"}
-        </button>
-      </form>
+            {error && (
+              <p className="text-sm text-red-500">
+                {error}
+              </p>
+            )}
 
-      <p className="text-sm mt-4">
-        No account yet? <a href="/register" className="underline">Register</a>
-      </p>
+            <button
+              type="submit"
+              disabled={loading}
+              className="rounded-lg bg-white px-4 py-2 font-medium text-black transition hover:bg-neutral-200 disabled:opacity-50"
+            >
+              {loading ? "Verifying passkey..." : "Login with passkey"}
+            </button>
+          </form>
+
+          <p className="mt-6 text-sm text-neutral-400">
+            No account yet?{" "}
+            <a
+              href="/register"
+              className="font-medium text-white underline hover:text-neutral-300"
+            >
+              Register
+            </a>
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
