@@ -1,5 +1,5 @@
 "use client";
-
+// created a form as component to be used in new poll page .
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createPollSchema } from "@/lib/validations/poll";
