@@ -1,5 +1,6 @@
 "use client";
 
+// result page showing poll result .
 import { useState } from "react";
 import Link from "next/link";
 

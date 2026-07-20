@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
-import Poll from "@/models/Poll";
+import Poll from "@/models/poll";
 import { getCurrentUser } from "@/lib/session";
 import { z } from "zod";
 
@@ -34,7 +34,6 @@ export async function POST(
     return NextResponse.json({ error: "This poll is closed" }, { status: 403 });
   }
 
-  // Creator can't vote on their own poll — keeps results honest
   if (poll.creator.toString() === user.userId) {
     return NextResponse.json({ error: "Creators can't vote on their own poll" }, { status: 403 });
   }
@@ -44,13 +43,10 @@ export async function POST(
     return NextResponse.json({ error: "You've already voted" }, { status: 409 });
   }
 
-  const option = poll.options.id(parsed.data.optionId);
-  if (!option) {
-    return NextResponse.json({ error: "Option not found" }, { status: 404 });
-  }
+const option = poll.options.find(
+  (opt) => opt._id.toString() === parsed.data.optionId
+);
 
-  // Atomic increment + push voter in one write — avoids a race where two
-  // simultaneous requests both read votes=5, both write votes=6 (lost update)
   await Poll.updateOne(
     { _id: id, "options._id": parsed.data.optionId },
     {
