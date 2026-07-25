@@ -63,6 +63,7 @@ export default function PollVoteForm({
 
   // Creator sees the live results view, never a voting view —
   // a poll owner voting on their own poll would defeat the point of results.
+  
   if (isCreator) {
     return (
       <div>
@@ -88,9 +89,19 @@ export default function PollVoteForm({
             );
           })}
         </div>
+
+        <Link
+          href="/"
+          className="mt-8 block w-full rounded-lg border border-zinc-700 px-4 py-3 text-center font-medium text-[#F5F3EE] transition hover:border-amber-400/50 hover:bg-amber-400/10"
+        >
+          Go to dashboard
+        </Link>
       </div>
     );
   }
+
+    
+
 
   if (!isLoggedIn) {
     return (

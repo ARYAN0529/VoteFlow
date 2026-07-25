@@ -5,10 +5,8 @@ import NewPollForm from "./NewPollForm";
 export default async function NewPollPage() {
   const user = await getCurrentUser();
 
-  // No cookie read happens on the client at all — by the time any HTML
-  // reaches the browser, we already know whether this user is allowed here.
   if (!user) {
-    redirect("/login"); // adjust to whatever your actual login route is
+    redirect("/login");
   }
 
   return (

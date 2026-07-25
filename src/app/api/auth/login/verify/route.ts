@@ -12,17 +12,16 @@ export async function POST(req: NextRequest) {
 
   const session = await getSession();
   const expectedChallenge = session.currentChallenge;
-  const email = session.email;
 
-  if (!expectedChallenge || !email) {
+  if (!expectedChallenge) {
     return NextResponse.json({ error: "No login in progress" }, { status: 400 });
   }
 
   await connectDB();
 
-  const user = await User.findOne({ email });
+  const user = await User.findOne({ "authenticators.credentialID": body.id });
   if (!user) {
-    return NextResponse.json({ error: "User not found" }, { status: 404 });
+    return NextResponse.json({ error: "Credential not recognized" }, { status: 400 });
   }
 
   const authenticator = user.authenticators.find((a) => a.credentialID === body.id);

@@ -24,18 +24,16 @@ export async function POST(req: NextRequest) {
   const options = await generateRegistrationOptions({
     rpName,
     rpID,
-    userName: email,       // WebAuthn's internal "userName" field — email works well here
-    userDisplayName: name, // shown in the OS passkey prompt (e.g. "Save passkey for Aryan?")
+    userName: email,
+    userDisplayName: name,
     attestationType: "none",
     authenticatorSelection: {
-      residentKey: "preferred",
+      residentKey: "required",
       userVerification: "preferred",
+      authenticatorAttachment: "platform",
     },
   });
 
-  // Stash the challenge + pending registration info in the session cookie.
-  // We can't save this on a User document yet because the User doesn't
-  // exist until registration is verified.
   const session = await getSession();
   session.currentChallenge = options.challenge;
   session.email = email.toLowerCase();
