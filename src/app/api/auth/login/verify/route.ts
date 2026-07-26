@@ -11,9 +11,14 @@ export async function POST(req: NextRequest) {
   const body = await req.json();
 
   const session = await getSession();
+  console.log("session at verify:", { 
+  hasChallenge: !!session.currentChallenge, 
+  email: session.email 
+});
   const expectedChallenge = session.currentChallenge;
+  const expectedEmail = session.email; // the email typed into the login form, saved during /options
 
-  if (!expectedChallenge) {
+  if (!expectedChallenge || !expectedEmail) {
     return NextResponse.json({ error: "No login in progress" }, { status: 400 });
   }
 
@@ -22,6 +27,17 @@ export async function POST(req: NextRequest) {
   const user = await User.findOne({ "authenticators.credentialID": body.id });
   if (!user) {
     return NextResponse.json({ error: "Credential not recognized" }, { status: 400 });
+  }
+
+  // Critical check: the passkey used must belong to the account that was
+  // actually requested at step 1 — otherwise picking a different saved
+  // passkey (e.g. from Windows' resident-key list) would silently log the
+  // user into someone else's account.
+  if (user.email !== expectedEmail) {
+    return NextResponse.json(
+      { error: "This passkey doesn't match the account you're logging into" },
+      { status: 403 }
+    );
   }
 
   const authenticator = user.authenticators.find((a) => a.credentialID === body.id);

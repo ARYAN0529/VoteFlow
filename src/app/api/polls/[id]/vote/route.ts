@@ -47,6 +47,11 @@ const option = poll.options.find(
   (opt) => opt._id.toString() === parsed.data.optionId
 );
 
+if (!option) {
+  return NextResponse.json({ error: "Option not found" }, { status: 404 });
+}
+
+
   await Poll.updateOne(
     { _id: id, "options._id": parsed.data.optionId },
     {

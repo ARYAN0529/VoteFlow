@@ -38,12 +38,23 @@ export default async function HomePage() {
           <div className="mb-8 flex items-center justify-between">
             <h1 className="text-2xl font-semibold text-white">Votify</h1>
 
-            {user ? (
-              <div className="flex items-center gap-3">
-                <span className="text-sm text-neutral-400">{user.email}</span>
-                <LogoutButton />
-              </div>
-            ) : (
+           {user ? (
+  <div className="flex items-center gap-3">
+    <Link
+      href="/polls/manage"
+      className="text-sm text-neutral-300 hover:text-white"
+    >
+      Manage polls
+    </Link>
+
+    <span className="text-sm text-neutral-400">{user.email}</span>
+
+    <LogoutButton />
+  </div>
+) : (
+
+
+              // do not change 
               <div className="flex items-center gap-3">
                 <Link
                   href="/login"
@@ -72,6 +83,7 @@ export default async function HomePage() {
           )}
 
           {/* Poll list */}
+          {/* Poll list */}
           <div className="flex flex-col gap-3">
             {polls.length === 0 && (
               <p className="text-neutral-500">
@@ -80,6 +92,7 @@ export default async function HomePage() {
             )}
 
             {polls.map((poll) => {
+              const isCreator = user ? poll.creator.toString() === user.userId : false;
               const totalVotes = poll.options.reduce((sum, opt) => sum + opt.votes, 0);
 
               return (
@@ -90,14 +103,22 @@ export default async function HomePage() {
                 >
                   <div className="flex items-center justify-between">
                     <h2 className="font-medium text-white">{poll.title}</h2>
-                    {poll.isClosed && (
-                      <span className="rounded-full bg-neutral-800 px-2 py-0.5 text-xs text-neutral-400">
-                        Closed
-                      </span>
-                    )}
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-xs ${poll.isClosed
+                          ? "bg-neutral-800 text-neutral-400"
+                          : "bg-emerald-500/10 text-emerald-400"
+                        }`}
+                    >
+                      {poll.isClosed ? "Closed" : "Live"}
+                    </span>
                   </div>
                   <p className="mt-1 text-sm text-neutral-500">
-                    {totalVotes} vote{totalVotes !== 1 ? "s" : ""} · {poll.options.length} options
+                    {/* Only the creator sees real vote data — matches the same rule
+              enforced on the poll detail page. Everyone else just sees
+              the option count, not results, to avoid leaking the outcome. */}
+                    {isCreator
+                      ? `${totalVotes} vote${totalVotes !== 1 ? "s" : ""} · ${poll.options.length} options`
+                      : `${poll.options.length} options`}
                   </p>
                 </Link>
               );
