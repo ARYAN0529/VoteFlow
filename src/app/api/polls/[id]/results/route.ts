@@ -1,10 +1,8 @@
 import { connectDB } from "@/lib/db";
 import Poll from "@/models/poll";
 import { getCurrentUser } from "@/lib/session";
-
-    // get poll results by id 
-    // this endpoint is only accessible to the poll creator, and returns the current vote counts for each option in the poll
-
+    // main SSE file
+    // it send data to pollVoteForm it is sse client
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ id: string }> }

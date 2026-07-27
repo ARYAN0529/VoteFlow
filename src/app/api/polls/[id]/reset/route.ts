@@ -24,14 +24,11 @@ export async function POST(
     return NextResponse.json({ error: "Only the creator can reset this poll" }, { status: 403 });
   }
 
-  // Zero every option's vote count AND clear the voters list — otherwise
-  // people who voted before the reset would be permanently blocked from
-  // voting again, even though the poll looks fresh.
   poll.options.forEach((opt) => {
     opt.votes = 0;
   });
   poll.voters = [];
-  poll.isClosed = false; // resetting also reopens it, so people can vote again
+  poll.isClosed = false;
 
   await poll.save();
 

@@ -1,25 +1,31 @@
 import Link from "next/link";
 import { connectDB } from "@/lib/db";
-
 import Poll from "@/models/poll";
 import { getCurrentUser } from "@/lib/session";
 import LogoutButton from "@/components/LogoutButton";
+import PollList from "./PollList";
 
-// This runs on the SERVER, before the page is sent to the browser.
-// That's why we can just call getCurrentUser() and query the database
-// directly here, instead of fetching an API route.
 export default async function HomePage() {
   const user = await getCurrentUser();
 
   await connectDB();
-
-  // .lean() returns plain JS objects instead of full Mongoose documents —
-  // faster, and we don't need any of the document methods here, just the data.
   const polls = await Poll.find().sort({ createdAt: -1 }).lean();
+
+  const initialPolls = polls.map((poll) => {
+    const isCreator = user ? poll.creator.toString() === user.userId : false;
+    const totalVotes = poll.options.reduce((sum, opt) => sum + opt.votes, 0);
+
+    return {
+      id: poll._id.toString(),
+      title: poll.title,
+      isClosed: poll.isClosed,
+      optionCount: poll.options.length,
+      totalVotes: isCreator ? totalVotes : null,
+    };
+  });
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-black">
-      {/* Grid background, same as login/register */}
       <div
         className="absolute inset-0"
         style={{
@@ -34,32 +40,20 @@ export default async function HomePage() {
 
       <div className="relative z-10 min-h-screen px-4 py-8">
         <div className="mx-auto max-w-2xl">
-          {/* Top bar: shows who's logged in, or login/register links */}
           <div className="mb-8 flex items-center justify-between">
             <h1 className="text-2xl font-semibold text-white">Votify</h1>
 
-           {user ? (
-  <div className="flex items-center gap-3">
-    <Link
-      href="/polls/manage"
-      className="text-sm text-neutral-300 hover:text-white"
-    >
-      Manage polls
-    </Link>
-
-    <span className="text-sm text-neutral-400">{user.email}</span>
-
-    <LogoutButton />
-  </div>
-) : (
-
-
-              // do not change 
+            {user ? (
               <div className="flex items-center gap-3">
-                <Link
-                  href="/login"
-                  className="text-sm text-neutral-300 hover:text-white"
-                >
+                <Link href="/polls/manage" className="text-sm text-neutral-300 hover:text-white">
+                  Manage polls
+                </Link>
+                <span className="text-sm text-neutral-400">{user.email}</span>
+                <LogoutButton />
+              </div>
+            ) : (
+              <div className="flex items-center gap-3">
+                <Link href="/login" className="text-sm text-neutral-300 hover:text-white">
                   Login
                 </Link>
                 <Link
@@ -72,7 +66,6 @@ export default async function HomePage() {
             )}
           </div>
 
-          {/* Create poll button — only shown if logged in */}
           {user && (
             <Link
               href="/polls/new"
@@ -82,48 +75,7 @@ export default async function HomePage() {
             </Link>
           )}
 
-          {/* Poll list */}
-          {/* Poll list */}
-          <div className="flex flex-col gap-3">
-            {polls.length === 0 && (
-              <p className="text-neutral-500">
-                No polls yet. {user ? "Create the first one!" : "Login to create one."}
-              </p>
-            )}
-
-            {polls.map((poll) => {
-              const isCreator = user ? poll.creator.toString() === user.userId : false;
-              const totalVotes = poll.options.reduce((sum, opt) => sum + opt.votes, 0);
-
-              return (
-                <Link
-                  key={poll._id.toString()}
-                  href={`/polls/${poll._id.toString()}`}
-                  className="rounded-xl border border-white/10 bg-neutral-900/70 p-4 backdrop-blur-md transition hover:border-white/20"
-                >
-                  <div className="flex items-center justify-between">
-                    <h2 className="font-medium text-white">{poll.title}</h2>
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-xs ${poll.isClosed
-                          ? "bg-neutral-800 text-neutral-400"
-                          : "bg-emerald-500/10 text-emerald-400"
-                        }`}
-                    >
-                      {poll.isClosed ? "Closed" : "Live"}
-                    </span>
-                  </div>
-                  <p className="mt-1 text-sm text-neutral-500">
-                    {/* Only the creator sees real vote data — matches the same rule
-              enforced on the poll detail page. Everyone else just sees
-              the option count, not results, to avoid leaking the outcome. */}
-                    {isCreator
-                      ? `${totalVotes} vote${totalVotes !== 1 ? "s" : ""} · ${poll.options.length} options`
-                      : `${poll.options.length} options`}
-                  </p>
-                </Link>
-              );
-            })}
-          </div>
+          <PollList initialPolls={initialPolls} />
         </div>
       </div>
     </div>
