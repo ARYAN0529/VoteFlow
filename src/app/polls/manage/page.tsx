@@ -3,6 +3,7 @@ import Link from "next/link";
 import { connectDB } from "@/lib/db";
 import Poll from "@/models/poll";
 import { getCurrentUser } from "@/lib/session";
+import AppShell from "@/components/AppShell";
 import ManagePollCard from "./ManagePollCard";
 
 export default async function ManagePollsPage() {
@@ -18,55 +19,38 @@ export default async function ManagePollsPage() {
     .lean();
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-black">
-      <div
-        className="absolute inset-0"
-        style={{
-          backgroundColor: "#000",
-          backgroundImage: `
-            linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px)
-          `,
-          backgroundSize: "56px 56px",
-        }}
-      />
-
-      <div className="relative z-10 min-h-screen px-4 py-8">
-        <div className="mx-auto max-w-2xl">
-          <div className="mb-8 flex items-center justify-between">
-            <h1 className="text-2xl font-semibold text-white">Manage your polls</h1>
-            <Link href="/" className="text-sm text-neutral-300 hover:text-white">
-              ← Back home
+    <AppShell
+      user={user}
+      activePath="/polls/manage"
+      pageTitle="Manage polls"
+      pageSubtitle="Close, reset, or delete polls you've created."
+    >
+      {polls.length === 0 ? (
+        <div className="rounded-lg border border-dashed border-[#2A2D36] px-6 py-14 text-center">
+          <p className="text-sm text-[#8B8F9C]">
+            You haven&apos;t created any polls yet.{" "}
+            <Link href="/polls/new" className="font-medium text-[#818CF8] hover:text-[#A5A8F5]">
+              Create one
             </Link>
-          </div>
-
-          {polls.length === 0 && (
-            <p className="text-neutral-500">
-              You haven&apos;t created any polls yet.{" "}
-              <Link href="/polls/new" className="text-white underline">
-                Create one
-              </Link>
-              .
-            </p>
-          )}
-
-          <div className="flex flex-col gap-3">
-            {polls.map((poll) => {
-              const totalVotes = poll.options.reduce((sum, opt) => sum + opt.votes, 0);
-              return (
-                <ManagePollCard
-                  key={poll._id.toString()}
-                  pollId={poll._id.toString()}
-                  title={poll.title}
-                  totalVotes={totalVotes}
-                  optionCount={poll.options.length}
-                  isClosed={poll.isClosed}
-                />
-              );
-            })}
-          </div>
+          </p>
         </div>
-      </div>
-    </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {polls.map((poll) => {
+            const totalVotes = poll.options.reduce((sum, opt) => sum + opt.votes, 0);
+            return (
+              <ManagePollCard
+                key={poll._id.toString()}
+                pollId={poll._id.toString()}
+                title={poll.title}
+                totalVotes={totalVotes}
+                optionCount={poll.options.length}
+                isClosed={poll.isClosed}
+              />
+            );
+          })}
+        </div>
+      )}
+    </AppShell>
   );
 }

@@ -47,7 +47,7 @@ export default function ManagePollCard({
     try {
       const res = await fetch(`/api/polls/${pollId}/reset`, { method: "POST" });
       if (res.ok) {
-        router.refresh(); // re-fetch server data so vote counts show 0 immediately
+        router.refresh();
       } else {
         const data = await res.json();
         setError(data.error ?? "Couldn't reset this poll");
@@ -76,35 +76,35 @@ export default function ManagePollCard({
   };
 
   return (
-    <div className="rounded-xl border border-white/10 bg-neutral-900/70 p-4 backdrop-blur-md">
-      <div className="flex items-center justify-between">
-        <Link href={`/polls/${pollId}`} className="font-medium text-white hover:underline">
+    <div className="rounded-xl border border-[#2A2D36] bg-[#15171E] p-5">
+      <div className="flex items-start justify-between gap-3">
+        <Link href={`/polls/${pollId}`} className="font-medium leading-snug text-[#F2F2F5] hover:underline">
           {title}
         </Link>
         <span
-          className={`rounded-full px-2 py-0.5 text-xs ${
-            closed ? "bg-neutral-800 text-neutral-400" : "bg-emerald-500/10 text-emerald-400"
+          className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${
+            closed ? "bg-[#2A2D36] text-[#8B8F9C]" : "bg-[#6366F1]/15 text-[#818CF8]"
           }`}
         >
           {closed ? "Closed" : "Live"}
         </span>
       </div>
 
-      <p className="mt-1 text-sm text-neutral-500">
+      <p className="mt-2 text-sm text-[#5C5F6B]">
         {totalVotes} vote{totalVotes !== 1 ? "s" : ""} · {optionCount} options
       </p>
 
       {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
 
-      <div className="mt-3 flex gap-2">
+      <div className="mt-4 flex flex-wrap gap-2">
         {!closed && (
           <button
             type="button"
             onClick={handleClose}
             disabled={loadingAction !== null}
-            className="rounded-lg border border-white/10 px-3 py-1.5 text-sm text-neutral-300 transition hover:border-white/30 disabled:opacity-50"
+            className="rounded-md border border-[#2A2D36] px-3 py-1.5 text-sm text-[#C8CAD3] transition hover:border-[#3A3D46] hover:text-[#F2F2F5] disabled:opacity-50"
           >
-            {loadingAction === "close" ? "Closing..." : "Close poll"}
+            {loadingAction === "close" ? "Closing..." : "Close"}
           </button>
         )}
 
@@ -112,9 +112,9 @@ export default function ManagePollCard({
           type="button"
           onClick={handleReset}
           disabled={loadingAction !== null}
-          className="rounded-lg border border-white/10 px-3 py-1.5 text-sm text-neutral-300 transition hover:border-white/30 disabled:opacity-50"
+          className="rounded-md border border-[#2A2D36] px-3 py-1.5 text-sm text-[#C8CAD3] transition hover:border-[#3A3D46] hover:text-[#F2F2F5] disabled:opacity-50"
         >
-          {loadingAction === "reset" ? "Resetting..." : "Reset votes"}
+          {loadingAction === "reset" ? "Resetting..." : "Reset"}
         </button>
 
         {confirmingDelete ? (
@@ -123,14 +123,14 @@ export default function ManagePollCard({
               type="button"
               onClick={handleDelete}
               disabled={loadingAction !== null}
-              className="rounded-lg bg-red-500/90 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-red-500 disabled:opacity-50"
+              className="rounded-md bg-red-500/90 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-red-500 disabled:opacity-50"
             >
-              {loadingAction === "delete" ? "Deleting..." : "Confirm delete"}
+              {loadingAction === "delete" ? "Deleting..." : "Confirm"}
             </button>
             <button
               type="button"
               onClick={() => setConfirmingDelete(false)}
-              className="rounded-lg border border-white/10 px-3 py-1.5 text-sm text-neutral-400"
+              className="rounded-md border border-[#2A2D36] px-3 py-1.5 text-sm text-[#8B8F9C]"
             >
               Cancel
             </button>
@@ -140,7 +140,7 @@ export default function ManagePollCard({
             type="button"
             onClick={() => setConfirmingDelete(true)}
             disabled={loadingAction !== null}
-            className="rounded-lg border border-red-500/30 px-3 py-1.5 text-sm text-red-400 transition hover:bg-red-500/10 disabled:opacity-50"
+            className="rounded-md border border-red-500/30 px-3 py-1.5 text-sm text-red-400 transition hover:bg-red-500/10 disabled:opacity-50"
           >
             Delete
           </button>

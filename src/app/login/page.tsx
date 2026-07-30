@@ -60,7 +60,7 @@ export default function LoginPage() {
 
   return (
     <div className="grid min-h-screen bg-[#0A0B10] lg:grid-cols-2">
-      {/* Left — meteor lines panel, hidden on mobile */}
+      {/* Left — meteor lines panel */}
       <div className="relative hidden overflow-hidden bg-black lg:block">
         <MeteorBackground />
         {/* Dark gradient overlay so text stays readable over the lines */}
