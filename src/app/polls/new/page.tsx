@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/session";
+import AppShell from "@/components/AppShell";
 import NewPollForm from "./NewPollForm";
 
 export default async function NewPollPage() {
@@ -10,20 +11,15 @@ export default async function NewPollPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0B0C0F] px-6 py-15">
+    <AppShell
+      user={user}
+      activePath="/polls/new"
+      pageTitle="New poll"
+      pageSubtitle="Ask a question, add your options."
+    >
       <div className="mx-auto max-w-xl">
-        <p className="text-xs font-medium uppercase tracking-[0.2em] text-amber-400/80">
-          Votify
-        </p>
-        <h1 className="mt-2 font-serif text-4xl font-semibold text-[#F5F3EE]">
-          Create a poll
-        </h1>
-        <p className="mt-2 text-sm text-zinc-500">
-          Give your poll a clear question and at least two options.
-        </p>
-
         <NewPollForm />
       </div>
-    </div>
+    </AppShell>
   );
 }

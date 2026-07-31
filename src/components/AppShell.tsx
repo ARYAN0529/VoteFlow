@@ -6,8 +6,11 @@ import ProfileMenu from "./ProfileMenu";
 //  header, and optional stats section.
 interface Props {
   user: { email: string } | null;
-  activePath: "/" | "/polls/manage";
-  pageTitle: string;
+ 
+  activePath: "/" | "/polls/manage" | "/polls/new" | "polls/[id]" | "/polls/[id]/results";
+
+// activePath: string;
+pageTitle: string;
   pageSubtitle: string;
   headerAction?: React.ReactNode;
   stats?: { label: string; value: number; accent?: string }[];
