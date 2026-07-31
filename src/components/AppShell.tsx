@@ -7,9 +7,9 @@ import ProfileMenu from "./ProfileMenu";
 interface Props {
   user: { email: string } | null;
  
-  activePath: "/" | "/polls/manage" | "/polls/new" | "polls/[id]" | "/polls/[id]/results";
+  // activePath: "/" | "/polls/manage" | "/polls/new" | "polls/[id]" | "/polls/[id]/results";
 
-// activePath: string;
+activePath: string;
 pageTitle: string;
   pageSubtitle: string;
   headerAction?: React.ReactNode;
