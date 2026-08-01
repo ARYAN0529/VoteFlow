@@ -1,8 +1,9 @@
 import { connectDB } from "@/lib/db";
 import Poll from "@/models/poll";
 import { getCurrentUser } from "@/lib/session";
-    // main SSE file
-    // it send data to pollVoteForm it is sse client
+
+// main SSE file
+// it sends data to pollVoteForm, which is the SSE client
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -15,21 +16,25 @@ export async function GET(
   }
 
   await connectDB();
+
   const poll = await Poll.findById(id).lean();
 
   if (!poll) {
     return new Response("Poll not found", { status: 404 });
   }
 
-  // Only the creator ever receives real vote numbers — same rule enforced
-  // everywhere else in the app. A non-creator hitting this endpoint directly
-  // (e.g. via devtools) still gets nothing useful back.
-  if (poll.creator.toString() !== user.userId) {
+  // Allow the poll creator OR a user who has already voted
+  // to receive the real-time poll results.
+  const hasVoted = poll.voters.some(
+    (v) => v.toString() === user.userId
+  );
+
+  if (poll.creator.toString() !== user.userId && !hasVoted) {
     return new Response("Forbidden", { status: 403 });
   }
 
-  // Track the last snapshot we sent as a JSON string — cheap way to detect
-  // "did anything actually change" without diffing objects field by field.
+  // Track the last snapshot we sent as a JSON string.
+  // This lets us detect whether anything actually changed.
   let lastSnapshot = "";
 
   const stream = new ReadableStream({
@@ -38,6 +43,7 @@ export async function GET(
 
       const sendUpdate = async () => {
         const current = await Poll.findById(id).lean();
+
         if (!current) return; // poll got deleted mid-stream
 
         const payload = {
@@ -46,25 +52,33 @@ export async function GET(
             text: opt.text,
             votes: opt.votes,
           })),
-          totalVotes: current.options.reduce((sum, opt) => sum + opt.votes, 0),
+          totalVotes: current.options.reduce(
+            (sum, opt) => sum + opt.votes,
+            0
+          ),
           isClosed: current.isClosed,
         };
 
         const snapshot = JSON.stringify(payload);
+
         if (snapshot !== lastSnapshot) {
           lastSnapshot = snapshot;
-          // SSE wire format: "data: <json>\n\n" — the double newline marks
-          // the end of one event, the browser's EventSource parses this for us.
-          controller.enqueue(encoder.encode(`data: ${snapshot}\n\n`));
+
+          // SSE wire format:
+          // data: <json>\n\n
+          controller.enqueue(
+            encoder.encode(`data: ${snapshot}\n\n`)
+          );
         }
       };
 
-      // Send the current state immediately on connect, then poll every 2s
+      // Send current state immediately on connection
       await sendUpdate();
+
+      // Check for changes every 2 seconds
       const interval = setInterval(sendUpdate, 2000);
 
-      // Clean up when the client disconnects (closes tab, navigates away) —
-      // without this the interval would keep running forever on the server.
+      // Clean up when the client disconnects
       req.signal.addEventListener("abort", () => {
         clearInterval(interval);
         controller.close();

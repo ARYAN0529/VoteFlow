@@ -12,6 +12,7 @@ export interface IUser extends Document {
   displayName: string;
   currentChallenge?: string;
   authenticators: IAuthenticator[];
+  isAdmin: boolean;
   createdAt: Date;
 }
 
@@ -30,6 +31,7 @@ const UserSchema = new Schema<IUser>({
   displayName: { type: String, required: true },
   currentChallenge: { type: String },
   authenticators: { type: [AuthenticatorSchema], default: [] },
+  isAdmin: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now },
 });
 

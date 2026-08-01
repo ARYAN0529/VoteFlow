@@ -17,6 +17,7 @@ interface Props {
   hasVoted: boolean;
   isLoggedIn: boolean;
   isCreator: boolean;
+  isAdmin: boolean;
   isClosed: boolean;
   createdAt: string;
 }
@@ -43,6 +44,7 @@ export default function PollVoteForm({
   hasVoted,
   isLoggedIn,
   isCreator,
+  isAdmin,
   isClosed,
   createdAt,
 }: Props) {
@@ -58,6 +60,14 @@ export default function PollVoteForm({
 
   const [liveOptions, setLiveOptions] = useState(options);
   const [liveTotalVotes, setLiveTotalVotes] = useState(totalVotes);
+
+  // Anyone who can see results: the creator, or anyone who has voted
+  // (submitted starts as hasVoted, and flips true right after a fresh vote).
+  const canSeeResults = isCreator || submitted;
+
+  // Only the creator or an admin can manage (close/delete) a poll —
+  // seeing results and managing a poll are two separate permissions.
+  const canManage = isCreator || isAdmin;
 
   const handleVote = async () => {
     if (!selected) {
@@ -112,8 +122,9 @@ export default function PollVoteForm({
     setTimeout(() => setCopied(false), 2000);
   };
 
+  // Live results stream — open for the creator, or any voter, not just the creator.
   useEffect(() => {
-    if (!isCreator) return;
+    if (!canSeeResults) return;
 
     const eventSource = new EventSource(`/api/polls/${pollId}/results`);
 
@@ -128,9 +139,24 @@ export default function PollVoteForm({
     };
 
     return () => eventSource.close();
-  }, [isCreator, pollId]);
+  }, [canSeeResults, pollId]);
 
-  if (isCreator) {
+  if (!isLoggedIn) {
+    return (
+      <p className="text-sm text-[#8B8F9C]">
+        <Link href="/login" className="font-medium text-[#818CF8] hover:text-[#A5A8F5]">
+          Log in
+        </Link>{" "}
+        to vote on this poll.
+      </p>
+    );
+  }
+
+  // Combined results view — shown to the creator, or to anyone right after
+  // (or previously having) voted. Management controls (close/delete) are
+  // gated separately by canManage, so a regular voter sees results but
+  // never gets a delete button.
+  if (canSeeResults) {
     const maxVotes = Math.max(...liveOptions.map((o) => o.votes), 0);
     const hasWinner = liveTotalVotes > 0;
 
@@ -208,6 +234,12 @@ export default function PollVoteForm({
           })}
         </div>
 
+        {!isCreator && (
+          <p className="mt-4 text-xs text-[#5C5F6B]">
+            You&apos;re seeing these results because you voted on this poll.
+          </p>
+        )}
+
         <Link
           href="/"
           className="mt-8 block w-full rounded-md border border-[#2A2D36] px-4 py-2.5 text-center text-sm font-medium text-[#F2F2F5] transition hover:border-[#6366F1]/50 hover:bg-[#6366F1]/10"
@@ -217,55 +249,38 @@ export default function PollVoteForm({
 
         {error && <p className="mt-4 text-sm text-red-400">{error}</p>}
 
-        {showConfirm ? (
-          <div className="mt-4 flex gap-3">
-            <button
-              type="button"
-              onClick={handleDelete}
-              disabled={isDeleting}
-              className="flex-1 rounded-md bg-red-500/90 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-500 disabled:opacity-50"
-            >
-              {isDeleting ? "Deleting..." : "Yes, delete"}
-            </button>
+        {/* Management controls — creator or admin only */}
+        {canManage &&
+          (showConfirm ? (
+            <div className="mt-4 flex gap-3">
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="flex-1 rounded-md bg-red-500/90 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-500 disabled:opacity-50"
+              >
+                {isDeleting ? "Deleting..." : "Yes, delete"}
+              </button>
 
+              <button
+                type="button"
+                onClick={() => setShowConfirm(false)}
+                disabled={isDeleting}
+                className="flex-1 rounded-md border border-[#2A2D36] px-4 py-2 text-sm text-[#8B8F9C] transition hover:border-[#3A3D46]"
+              >
+                Cancel
+              </button>
+            </div>
+          ) : (
             <button
               type="button"
-              onClick={() => setShowConfirm(false)}
-              disabled={isDeleting}
-              className="flex-1 rounded-md border border-[#2A2D36] px-4 py-2 text-sm text-[#8B8F9C] transition hover:border-[#3A3D46]"
+              onClick={() => setShowConfirm(true)}
+              className="mt-4 block w-full rounded-md border border-red-500/30 px-4 py-2.5 text-center text-sm text-red-400 transition hover:bg-red-500/10"
             >
-              Cancel
+              {isAdmin && !isCreator ? "Delete poll (admin)" : "Delete poll"}
             </button>
-          </div>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setShowConfirm(true)}
-            className="mt-4 block w-full rounded-md border border-red-500/30 px-4 py-2.5 text-center text-sm text-red-400 transition hover:bg-red-500/10"
-          >
-            Delete poll
-          </button>
-        )}
+          ))}
       </div>
-    );
-  }
-
-  if (!isLoggedIn) {
-    return (
-      <p className="text-sm text-[#8B8F9C]">
-        <Link href="/login" className="font-medium text-[#818CF8] hover:text-[#A5A8F5]">
-          Log in
-        </Link>{" "}
-        to vote on this poll.
-      </p>
-    );
-  }
-
-  if (submitted) {
-    return (
-      <p className="text-sm text-[#F2F2F5]">
-        ✓ Your vote has been recorded. Only the poll creator can see results.
-      </p>
     );
   }
 
